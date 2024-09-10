@@ -13,11 +13,13 @@ public class MP3Player {
     }
 
     public void play(String resourcePath) {
-        try (InputStream audioSrc = getClass().getResourceAsStream(resourcePath);
-             AudioInputStream audioStream = AudioSystem.getAudioInputStream(audioSrc)) {
-            Clip clip = AudioSystem.getClip();
-            clip.open(audioStream);
-            clip.start();
+        try (InputStream audioSrc = getClass().getResourceAsStream(resourcePath)) {
+            assert audioSrc != null;
+            try (AudioInputStream audioStream = AudioSystem.getAudioInputStream(audioSrc)) {
+                Clip clip = AudioSystem.getClip();
+                clip.open(audioStream);
+                clip.start();
+            }
         } catch (UnsupportedAudioFileException | IOException | LineUnavailableException e) {
             e.printStackTrace();
         }
