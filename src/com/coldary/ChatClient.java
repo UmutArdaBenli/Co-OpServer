@@ -1,7 +1,8 @@
 package com.coldary;
 
 import com.coldary.utils.FileHandler;
-import com.coldary.utils.MP3Player;
+import com.coldary.utils.WAVPlayer;
+
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.io.BufferedReader;
@@ -73,7 +74,8 @@ public class ChatClient {
                            String serverMessage;
                            if ((serverMessage = reader.readLine()) != null) {
                               chatArea.append(serverMessage + "\n");
-                              MP3Player player = new MP3Player("/one_beep.wav");
+                              WAVPlayer player = new WAVPlayer();
+                              player.play("/one_beep.wav");
                               continue;
                            }
                         } catch (IOException var3) {
