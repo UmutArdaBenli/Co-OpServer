@@ -1,3 +1,5 @@
+package com.coldary;
+
 import java.io.*;
 import java.net.*;
 import java.util.*;
@@ -81,8 +83,8 @@ class ServerThread extends Thread {
             }
             String message;
             while ((message = reader.readLine()) != null) {
-                System.out.println("Received: " + message);
-                broadcastMessage("Echo: " + message, writer);
+                System.out.println(message);
+                broadcastMessage(message, writer);
             }
         } catch (IOException ex) {
             ex.printStackTrace();
