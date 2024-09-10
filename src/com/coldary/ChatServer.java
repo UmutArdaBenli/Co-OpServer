@@ -29,6 +29,7 @@ public class ChatServer {
                 Socket socket = serverSocket.accept();
                 String clientIp = socket.getInetAddress().getHostAddress();
                 System.out.println("New client connected: " + clientIp);
+                //broadcastMessage("User joined the server!");
                 new ServerThread(socket).start();
             }
         } catch (IOException ex) {
@@ -64,6 +65,13 @@ public class ChatServer {
             return null;
         }
         return ipAddress.substring(0, lastDot + 1);
+    }
+    public static void broadcastMessage(String message) {
+        synchronized (ChatServer.clientWriters) {
+            for (PrintWriter writer : ChatServer.clientWriters) {
+                writer.println(message);
+            }
+        }
     }
 }
 

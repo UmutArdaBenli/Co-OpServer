@@ -18,6 +18,7 @@ public class ChatClient {
     private static String USER;
     private static JPanel chatArea;
     private static JTextArea inputField;
+    private static JScrollPane scrollPane;
 
     public static void main(String[] args) throws IOException {
         FileHandler fileHandler = new FileHandler();
@@ -31,7 +32,7 @@ public class ChatClient {
         // Chat area setup
         chatArea = new JPanel();
         chatArea.setLayout(new BoxLayout(chatArea, BoxLayout.Y_AXIS));
-        JScrollPane scrollPane = new JScrollPane(chatArea);
+        scrollPane = new JScrollPane(chatArea);
         frame.add(scrollPane, BorderLayout.CENTER);
 
         // Input field setup
@@ -53,6 +54,14 @@ public class ChatClient {
             }
         });
         new CustomFontStyle();
+        JScrollBar verticalScrollBar = scrollPane.getVerticalScrollBar();
+
+        Timer timer = new Timer(500, ev -> {
+            verticalScrollBar.setValue(verticalScrollBar.getMaximum());
+        });
+        timer.setRepeats(true);
+        timer.start();
+
         frame.setLocationRelativeTo(null);
         frame.setVisible(true);
 
@@ -77,7 +86,7 @@ public class ChatClient {
                             }
                             // Play a sound for incoming messages from others
                             WAVPlayer player = new WAVPlayer();
-                            player.play("/one_beep.wav");
+                            player.play("/sounds/message.wav");
                         }
                     } catch (IOException e) {
                         e.printStackTrace();
