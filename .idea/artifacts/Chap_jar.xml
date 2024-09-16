@@ -1,6 +1,6 @@
 <component name="ArtifactManager">
-  <artifact type="jar" name="Co-OpServer:jar">
-    <output-path>$PROJECT_DIR$/out/artifacts/Co_OpServer_jar</output-path>
+  <artifact type="jar" name="Chap:jar">
+    <output-path>$PROJECT_DIR$/out/artifacts/Chap_jar</output-path>
     <root id="archive" name="Co-OpServer.jar">
       <element id="directory" name="META-INF">
         <element id="file-copy" path="$PROJECT_DIR$/resources/META-INF/MANIFEST.MF" />
