@@ -19,8 +19,11 @@ public class ChatClient {
     private static String USER;
     private static JPanel chatArea;
     private static JTextArea inputField;
-    private static PrintWriter writer;  // Make writer a class-level variable
     private static JScrollPane scrollPane;
+
+    private static Socket socket;
+    private static PrintWriter writer;
+    private static BufferedReader reader;
 
 
     public static void main(String[] args) throws IOException {
@@ -94,18 +97,54 @@ public class ChatClient {
 
     private static void connectToServer() {
         try {
-            Socket socket = new Socket(HOST, PORT);
-            BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-            writer = new PrintWriter(socket.getOutputStream(), true);  // Initialize writer here
-            // Rest of the method...
+            socket = new Socket(HOST, PORT);
+            reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+            writer = new PrintWriter(socket.getOutputStream(), true);
+
+            // Thread to listen for incoming messages
+            new Thread(() -> {
+                StringBuilder messageBuilder = new StringBuilder();  // To accumulate multiline messages
+                while (true) {
+                    try {
+                        String line = reader.readLine();
+                        if (line != null) {
+                            // Accumulate lines until we hit the "END_OF_MESSAGE" delimiter
+                            if (line.contains("END_OF_MESSAGE")) {
+                                messageBuilder.append(line.replace("END_OF_MESSAGE", "").trim());  // Remove the delimiter
+                                String fullMessage = messageBuilder.toString();
+                                // Add chat bubble with the full message
+                                if (!fullMessage.startsWith(USER + ":")) {
+                                    addChatBubble(fullMessage, false);
+                                }
+                                WAVPlayer player = new WAVPlayer();
+                                player.play("/sounds/message.wav");
+                                messageBuilder.setLength(0);  // Clear the builder for the next message
+                            } else {
+                                messageBuilder.append(line).append("\n");
+                            }
+                        }
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                        break;
+                    }
+                }
+            }).start();
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
+
     private static void sendMessage(String message) {
-        writer.println(USER + ": " + message);
+        if (writer != null) {
+            // Append a custom delimiter to the message to signify the end of a message block
+            writer.println(USER + ": " + message + "END_OF_MESSAGE");
+            WAVPlayer player = new WAVPlayer();
+            player.play("/sounds/message.wav");
+
+        }
     }
+
 
     // Method to add a chat bubble to the chat area
     private static void addChatBubble(String message, boolean isSentByUser) {
@@ -120,7 +159,7 @@ public class ChatClient {
 
         // Label for the sender name (at the top)
         JLabel nameLabel = new JLabel(senderName);
-        nameLabel.setFont(new Font("SF-Pro", Font.PLAIN, 14));  // Bold font for the name
+        nameLabel.setFont(new Font("Arial", Font.PLAIN, 14));  // Bold font for the name
         nameLabel.setBorder(new EmptyBorder(5, 5, 0, 5));  // Padding for the name
 
         String formattedMessage = chatMessage
@@ -152,9 +191,11 @@ public class ChatClient {
         chatArea.add(bubble);
         chatArea.revalidate();  // Refresh the chat area to show the new message
         chatArea.repaint();
-        JScrollBar verticalScrollBar = scrollPane.getVerticalScrollBar();
-        verticalScrollBar.setValue(verticalScrollBar.getMaximum());
-
+        // Scroll to the bottom of the chat area
+        SwingUtilities.invokeLater(() -> {
+            JScrollBar verticalScrollBar = scrollPane.getVerticalScrollBar();
+            verticalScrollBar.setValue(verticalScrollBar.getMaximum());
+        });
     }
 
 }
