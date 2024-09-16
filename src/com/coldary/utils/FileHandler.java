@@ -8,7 +8,6 @@ public class FileHandler {
     File configFile = new File("config.txt");
 
     public FileHandler() throws IOException {
-        System.out.println("hello");
         if(configFile.createNewFile()){
             System.out.println("Created File 'Config.txt'");
             FileWriter w = new FileWriter("config.txt");
