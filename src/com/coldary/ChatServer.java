@@ -94,8 +94,10 @@ class ServerThread extends Thread {
                 System.out.println(message);
                 broadcastMessage(message, writer);
             }
-        } catch (IOException ex) {
-            ex.printStackTrace();
+        } catch (SocketException ex) {
+            System.out.println("User has left the Server.");
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         } finally {
             if (writer != null) {
                 synchronized (ChatServer.clientWriters) {

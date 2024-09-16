@@ -53,7 +53,7 @@ public class ChatClient {
                 }
             }
         });
-        new CustomFontStyle();
+        //new CustomFontStyle();
         JScrollBar verticalScrollBar = scrollPane.getVerticalScrollBar();
 
         Timer timer = new Timer(500, ev -> {
@@ -127,8 +127,14 @@ public class ChatClient {
         nameLabel.setFont(new Font("SF-Pro", Font.PLAIN, 14));  // Bold font for the name
         nameLabel.setBorder(new EmptyBorder(5, 5, 0, 5));  // Padding for the name
 
-        // Label for the chat message (in the middle)
-        JLabel messageLabel = new JLabel("<html><p style='width: 200px;'>" + chatMessage + "</p></html>");
+        // Replace newlines with <br> for HTML
+// Replace newlines with <br> and spaces with &nbsp; to preserve formatting
+        String formattedMessage = chatMessage
+                .replace(" ", "&nbsp;")        // Preserve spaces
+                .replace("\n", "<br>");        // Preserve line breaks
+
+// Now use the formatted message with HTML
+        JLabel messageLabel = new JLabel("<html><div style='width: 200px; word-wrap: break-word;'>" + formattedMessage + "</div></html>");
         messageLabel.setFont(new Font("Arial", Font.PLAIN, 12));
         messageLabel.setBorder(new EmptyBorder(5, 5, 5, 5));  // Padding for the message
         messageLabel.setOpaque(true);
