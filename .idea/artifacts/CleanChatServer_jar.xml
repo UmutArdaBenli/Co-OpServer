@@ -1,0 +1,8 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="CleanChatServer:jar">
+    <output-path>$PROJECT_DIR$/out/artifacts/CleanChatServer_jar</output-path>
+    <root id="archive" name="Co-OpServer.jar">
+      <element id="module-output" name="Co-OpServer" />
+    </root>
+  </artifact>
+</component>

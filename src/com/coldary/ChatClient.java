@@ -1,11 +1,12 @@
 package com.coldary;
 
-import com.coldary.utils.CustomFontStyle;
 import com.coldary.utils.FileHandler;
 import com.coldary.utils.WAVPlayer;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import java.awt.*;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
@@ -18,7 +19,9 @@ public class ChatClient {
     private static String USER;
     private static JPanel chatArea;
     private static JTextArea inputField;
+    private static PrintWriter writer;  // Make writer a class-level variable
     private static JScrollPane scrollPane;
+
 
     public static void main(String[] args) throws IOException {
         FileHandler fileHandler = new FileHandler();
@@ -35,32 +38,52 @@ public class ChatClient {
         scrollPane = new JScrollPane(chatArea);
         frame.add(scrollPane, BorderLayout.CENTER);
 
-        // Input field setup
-        inputField = new JTextArea(5, 50);
-        frame.add(inputField, BorderLayout.SOUTH);
+        inputField = new JTextArea(1, 50);  // Start with a single row height
+        inputField.setLineWrap(true);       // Enable wrapping of text
+        inputField.setWrapStyleWord(true);  // Break lines at word boundaries
+
+// Create a JScrollPane for the input field to add scrolling functionality
+        JScrollPane inputScrollPane = new JScrollPane(inputField);
+        inputScrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED); // Add scrollbar when needed
+        inputScrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+        inputScrollPane.setPreferredSize(new Dimension(50, 100));  // Set a preferred size
+
+        frame.add(inputScrollPane, BorderLayout.SOUTH);  // Add the input scroll pane to the frame
+
+// Adjust size dynamically as the user types, but limit to a maximum number of rows
+        inputField.getDocument().addDocumentListener(new DocumentListener() {
+            public void insertUpdate(DocumentEvent e) { adjustTextAreaSize(); }
+            public void removeUpdate(DocumentEvent e) { adjustTextAreaSize(); }
+            public void changedUpdate(DocumentEvent e) { adjustTextAreaSize(); }
+
+            private void adjustTextAreaSize() {
+                int lineCount = inputField.getLineCount();
+                int maxRows = 5;  // Maximum rows before the scroll bar appears
+                inputField.setRows(Math.min(lineCount, maxRows));  // Limit to maxRows
+                inputField.revalidate();  // Refresh the input area without resizing the frame
+            }
+        });
+
         inputField.addKeyListener(new KeyAdapter() {
             public void keyPressed(KeyEvent e) {
-                if (e.getKeyCode() == 10 && !e.isShiftDown()) {
+                if (e.getKeyCode() == KeyEvent.VK_ENTER && !e.isShiftDown()) {
                     String message = inputField.getText().trim();
                     if (!message.isEmpty()) {
                         sendMessage(message);  // Send the message to the server
                         addChatBubble(USER + ": " + message, true);  // Add it to the chat area as user's message
                         inputField.setText("");  // Clear the input field
+                        inputField.setRows(1);  // Reset to single line after message is sent
                     }
                     e.consume();  // Prevent the default action of adding a new line
-                } else if (e.getKeyCode() == 10) {
-                    ChatClient.inputField.append("\n");
+                } else if (e.getKeyCode() == KeyEvent.VK_ENTER) {
+                    inputField.append("\n");
                 }
             }
         });
-        //new CustomFontStyle();
-        JScrollBar verticalScrollBar = scrollPane.getVerticalScrollBar();
 
-        Timer timer = new Timer(500, ev -> {
-            verticalScrollBar.setValue(verticalScrollBar.getMaximum());
-        });
-        timer.setRepeats(true);
-        timer.start();
+
+        //new CustomFontStyle();
+
 
         frame.setLocationRelativeTo(null);
         frame.setVisible(true);
@@ -73,42 +96,15 @@ public class ChatClient {
         try {
             Socket socket = new Socket(HOST, PORT);
             BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-            PrintWriter writer = new PrintWriter(socket.getOutputStream(), true);
-
-            new Thread(() -> {
-                while (true) {
-                    try {
-                        String serverMessage = reader.readLine();
-                        if (serverMessage != null) {
-                            // Check if the message is from the current user, and skip adding it if so
-                            if (!serverMessage.startsWith(USER + ":")) {
-                                addChatBubble(serverMessage, false);  // Only add if it's from another user
-                            }
-                            // Play a sound for incoming messages from others
-                            WAVPlayer player = new WAVPlayer();
-                            player.play("/sounds/message.wav");
-                        }
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                }
-            }).start();
+            writer = new PrintWriter(socket.getOutputStream(), true);  // Initialize writer here
+            // Rest of the method...
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    // Method to send a message to the server
     private static void sendMessage(String message) {
-        try {
-            Socket socket = new Socket(HOST, PORT);
-            PrintWriter writer = new PrintWriter(socket.getOutputStream(), true);
-            writer.println(USER + ": " + message);
-            writer.close();
-            socket.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        writer.println(USER + ": " + message);
     }
 
     // Method to add a chat bubble to the chat area
@@ -127,13 +123,10 @@ public class ChatClient {
         nameLabel.setFont(new Font("SF-Pro", Font.PLAIN, 14));  // Bold font for the name
         nameLabel.setBorder(new EmptyBorder(5, 5, 0, 5));  // Padding for the name
 
-        // Replace newlines with <br> for HTML
-// Replace newlines with <br> and spaces with &nbsp; to preserve formatting
         String formattedMessage = chatMessage
                 .replace(" ", "&nbsp;")        // Preserve spaces
                 .replace("\n", "<br>");        // Preserve line breaks
 
-// Now use the formatted message with HTML
         JLabel messageLabel = new JLabel("<html><div style='width: 200px; word-wrap: break-word;'>" + formattedMessage + "</div></html>");
         messageLabel.setFont(new Font("Arial", Font.PLAIN, 12));
         messageLabel.setBorder(new EmptyBorder(5, 5, 5, 5));  // Padding for the message
@@ -159,6 +152,9 @@ public class ChatClient {
         chatArea.add(bubble);
         chatArea.revalidate();  // Refresh the chat area to show the new message
         chatArea.repaint();
+        JScrollBar verticalScrollBar = scrollPane.getVerticalScrollBar();
+        verticalScrollBar.setValue(verticalScrollBar.getMaximum());
+
     }
 
 }
